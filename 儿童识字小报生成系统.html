@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儿童识字小报生成系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            padding: 40px 0;
+        }
+
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .generation-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        small {
+            display: block;
+            color: #888;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+
+        .generate-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 30px;
+        }
+
+        .generate-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .generate-button:active {
+            transform: translateY(0);
+        }
+
+        .tips {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .tips h3 {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .tips ul {
+            list-style-position: inside;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .progress-container {
+            display: none;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .progress-status {
+            text-align: center;
+            font-size: 1.1em;
+            color: #666;
+            margin: 10px 0;
+        }
+
+        .result-container {
+            display: none;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .result-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .download-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .download-button:hover {
+            background: #45a049;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2em;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>儿童识字小报生成系统</h1>
+            <p>帮助5-9岁儿童快乐识字</p>
+        </header>
+
+        <div class="main-content">
+            <div class="generation-form" id="generationForm">
+                <h2 style="text-align: center; margin-bottom: 30px; color: #555;">创建识字小报</h2>
+
+                <!-- API Key配置区域 -->
+                <div class="api-config" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                    <h3 style="color: #555; margin-bottom: 15px;">API密钥配置</h3>
+                    <div class="form-group">
+                        <label for="imageApiKey">图像生成API密钥 *</label>
+                        <input
+                            type="password"
+                            id="imageApiKey"
+                            placeholder="输入Nano Banana Pro API密钥"
+                            style="width: 100%; padding: 10px;"
+                        >
+                        <small>用于生成识字小报图片，使用Nano Banana Pro服务</small>
+                    </div>
+                    <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                        <i class="fas fa-info-circle"></i>
+                        提示：识字词汇已内置预制库，支持公园、超市、动物园、学校、医院、家庭、海滩、农场等场景
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="theme">主题 *</label>
+                    <input
+                        type="text"
+                        id="theme"
+                        placeholder="例如：超市、公园、动物园"
+                        required
+                    >
+                    <small>输入一个场景主题，系统将自动生成相关的识字内容</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">标题（可选）</label>
+                    <input
+                        type="text"
+                        id="title"
+                        placeholder="不填写将自动生成"
+                    >
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="wordCount">词汇数量</label>
+                        <select id="wordCount">
+                            <option value="15">15个</option>
+                            <option value="18" selected>18个</option>
+                            <option value="20">20个</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="aspectRatio">画面比例</label>
+                        <select id="aspectRatio">
+                            <option value="3:4" selected>竖版 (3:4)</option>
+                            <option value="4:3">横版 (4:3)</option>
+                            <option value="1:1">正方形 (1:1)</option>
+                            <option value="9:16">手机竖屏 (9:16)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="resolution">分辨率</label>
+                        <select id="resolution">
+                            <option value="1K">1K (快速)</option>
+                            <option value="2K" selected>2K (推荐)</option>
+                            <option value="4K">4K (高清)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="outputFormat">输出格式</label>
+                        <select id="outputFormat">
+                            <option value="png" selected>PNG (推荐)</option>
+                            <option value="jpg">JPG</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="generate-button" onclick="startGeneration()">开始生成</button>
+
+                <div class="tips">
+                    <h3>使用提示</h3>
+                    <ul>
+                        <li>主题应该是一个具体的场景，如"超市"、"医院"、"学校"等</li>
+                        <li>生成的识字小报适合5-9岁儿童学习使用</li>
+                        <li>每个词汇都会标注拼音，配有生动的卡通插图</li>
+                        <li>需要提供API密钥才能使用：
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>LLM API密钥：支持OpenAI API密钥（GPT-3.5/4）</li>
+                                <li>图像生成API密钥：Nano Banana Pro API密钥</li>
+                            </ul>
+                        </li>
+                        <li>API密钥仅在本地使用，不会上传到任何服务器</li>
+                        <li>图片生成可能需要1-2分钟，请耐心等待</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="progress-container" id="progressContainer">
+                <h2 style="text-align: center; margin-bottom: 20px; color: #555;">正在生成识字小报...</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill">0%</div>
+                </div>
+                <div class="progress-status" id="progressStatus">准备中...</div>
+            </div>
+
+            <div class="result-container" id="resultContainer">
+                <h2 style="margin-bottom: 20px; color: #555;">生成完成！</h2>
+                <img class="result-image" id="resultImage" alt="生成的识字小报">
+                <br>
+                <a href="#" class="download-button" onclick="downloadImage(event)">下载图片</a>
+                <br><br>
+                <button class="generate-button" onclick="resetForm()">生成新的小报</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 示例图片数据（base64编码的占位图片）
+        const sampleImages = {
+            '超市': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjEwMDAiIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSIxMDAwIiBmaWxsPSIjRkZGRkZGIi8+Cjx0ZXh0IHg9IjQwMCIgeT0iNTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+55So5o6l5aSW5r+S5Y2w5ZyoPC90ZXh0Pgo8cmVjdCB4PSI1MCIgeT0iMTAwIiB3aWR0aD0iNzAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI0Y1RjVGNSIgc3Ryb2tlPSIjREREIiBzdHJva2Utd2lkdGg9IjIiLz4KPGNpcmNsZSBjeD0iMTUwIiBjeT0iMjUwIiByPSI0MCIgZmlsbD0iI0ZGN0Q3RCIvPgo8dGV4dCB4PSIxNTAiIHk9IjI2MCIgZm9udC1zaXplPSIyMCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPue9qOWOmTwvdGV4dD4KPHJlY3QgeD0iMjUwIiB5PSIyMDAiIHdpZHRoPSIxNTAiIGhlaWdodD0iMTAwIiBmaWxsPSIjODdDRUVCIi8+Cjx0ZXh0IHg9IjMyNSIgeT0iMjUwIiBmb250LXNpemU9IjIwIiBmaWxsPSIjMzMzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7pu5jorqHmsZ/msZE8L3RleHQ+CjxyZWN0IHg9IjQ1MCIgeT0iMjAwIiB3aWR0aD0iMTUwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzg3Q0VFQiIvPgo8dGV4dCB4PSI1MjUiIHk9IjI1MCIgZm9udC1zaXplPSIyMCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+6K2m5Y+3PC90ZXh0Pgo8cmVjdCB4PSIxMDAiIHk9IjQwMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNGRjc3NzciLz4KPHRleHQgeD0iMTUwIiB5PSI0NzUiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7mg4Xml6U8L3RleHQ+CjxyZWN0IHg9IjI1MCIgeT0iNDAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI0ZFNzc0OSIvPgo8dGV4dCB4PSIzMDAiIHk9IjQ3NSIgZm9udC1zaXplPSIyMCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPua1i+ivleiAheWPrzwvdGV4dD4KPHJlY3QgeD0iNDAwIiB5PSI0MDAiIHdpZHRoPSIxMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRkY3Nzc3Ii8+Cjx0ZXh0IHg9IjQ1MCIgeT0iNDc1IiBmb250LXNpemU9IjIwIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+57G75Z+2PC90ZXh0Pgo8cmVjdCB4PSI1NTAiIHk9IjQwMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNGRTc3NDkiLz4KPHRleHQgeD0iNjAwIiB5PSI0NzUiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7moofov57nvarovoOiQjDwvdGV4dD4KPHJlY3QgeD0iMjUwIiB5PSI1ODAiIHdpZHRoPSIzMDAiIGhlaWdodD0iNTAiIGZpbGw9IiNEREREREQiIHN0cm9rZT0iIzk5OSIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjx0ZXh0IHg9IjQwMCIgeT0iNjEwIiBmb250LXNpemU9IjI1IiBmaWxsPSIjRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7kuK3nmoTlvankuro8L3RleHQ+Cjwvc3ZnPg==',
+            '公园': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjEwMDAiIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSIxMDAwIiBmaWxsPSIjODdDRUVCIi8+Cjx0ZXh0IHg9IjQwMCIgeT0iNTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+5Y2w5Zyo5aSW5r+S5Y2w5ZyoPC90ZXh0Pgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjgwIiBmaWxsPSIjNEY3QjQzIi8+CjxyZWN0IHg9IjE4MCIgeT0iMjgwIiB3aWR0aD0iNDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjOUI2RTQ3Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTgwIiBmb250LXNpemU9IjI4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+5q2j5a6277yMPC90ZXh0Pgo8Y2lyY2xlIGN4PSI0MDAiIGN5PSIyNTAiIHI9IjcwIiBmaWxsPSIjNEY3QjQzIi8+CjxyZWN0IHg9IjM4MCIgeT0iMzIwIiB3aWR0aD0iNDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjOUI2RTQ3Ii8+Cjx0ZXh0IHg9IjQwMCIgeT0iMjMwIiBmb250LXNpemU9IjI4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+5q2j5a6277yM576O5Zu+PC90ZXh0Pgo8Y2lyY2xlIGN4PSI2MDAiIGN5PSIyMDAiIHI9IjgwIiBmaWxsPSIjNEY3QjQzIi8+CjxyZWN0IHg9IjU4MCIgeT0iMjgwIiB3aWR0aD0iNDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjOUI2RTQ3Ii8+Cjx0ZXh0IHg9IjYwMCIgeT0iMTgwIiBmb250LXNpemU9IjI4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+5q2j5a6277yM5Zu+PC90ZXh0Pgo8ZWxsaXBzZSBjeD0iNDAwIiBjeT0iNjAwIiByeD0iMTUwIiByeT0iNTAiIGZpbGw9IiM4RkJDODMiLz4KPHRleHQgeD0iNDAwIiB5PSI2MDAiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiMzMzMzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7kvankuro8L3RleHQ+CjxwYXRoIGQ9Ik0xMDAgNzAwIFEzMDAgNTUwIDUwMCA3MDAiIHN0cm9rZT0iIzY2NjY2IiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiLz4KPGNpcmNsZSBjeD0iMTUwIiBjeT0iNDUwIiByPSIzMCIgZmlsbD0iI0ZGRDcwMCIvPgo8dGV4dCB4PSIxNTAiIHk9IjQ2MCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuaGheS9kTwvdGV4dD4KPGNpcmNsZSBjeD0iMzAwIiBjeT0iNDgwIiByPSIyNSIgZmlsbD0iIzg3Q0VFQiIvPgo8dGV4dCB4PSIzMDAiIHk9IjQ4NSIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+5b6F5Z2LPC90ZXh0Pgo8L3N2Zz4=',
+            '动物园': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjEwMDAiIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSIxMDAwIiBmaWxsPSIjRkZGRkZGIi8+Cjx0ZXh0IHg9IjQwMCIgeT0iNTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+5Y2w5Zyo5YmN56uv5Y2w5Zyo5aSW5r+S5Y2w5ZyoPC90ZXh0Pgo8ZWxsaXBzZSBjeD0iMjAwIiBjeT0iMzAwIiByeD0iNjAiIHJ5PSI0NSIgZmlsbD0iI0ZGN0Q3RCIgc3Ryb2tlPSIjREREIiBzdHJva2Utd2lkdGg9IjIiLz4KPGVsbGlwc2UgY3g9IjE4MCIgY3k9IjI4MCIgcng9IjE1IiByeT0iMjAiIGZpbGw9IiNGRjdEN0QiLz4KPGNpcmNsZSBjeD0iMTcwIiBjeT0iMjc1IiByPSI1IiBmaWxsPSIjMzMzIi8+CjxjaXJjbGUgY3g9IjE5MCIgY3k9IjI3NSIgcj0iNSIgZmlsbD0iIzMzMyIvPgo8cGF0aCBkPSJNMjAwIDMyMCBRMjIwIDM0MCAyMjAgMzYwIiBzdHJva2U9IiNEREQiIHN0cm9rZS13aWR0aD0iMiIvPgo8dGV4dCB4PSIyMDAiIHk9IjM1MCIgZm9udC1zaXplPSIyMCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+6LSt5LqRPC90ZXh0Pgo8cmVjdCB4PSI0MDAiIHk9IjI1MCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNGRjc3NzciIHN0cm9rZT0iI0RERCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxjaXJjbGUgY3g9IjQzMCIgY3k9IjIzMCIgcj0iMTAiIGZpbGw9IiMzMzMiLz4KPGNpcmNsZSBjeD0iNDcwIiBjeT0iMjMwIiByPSIxMCIgZmlsbD0iIzMzMyIvPgo8cGF0aCBkPSJNNDAwIDI1MCBRMzg1IDI0MCAzODUgMjIwIiBzdHJva2U9IiNEREQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNNDAwIDI1MCBRNDE1IDI0MCA0MTUgMjIwIiBzdHJva2U9IiNEREQiIHN0cm9rZS13aWR0aD0iMiIvPgo8dGV4dCB4PSI0NTAiIHk9IjMyNSIgZm9udC1zaXplPSIyMCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+5a2m5bi4PC90ZXh0Pgo8ZWxsaXBzZSBjeD0iNjAwIiBjeT0iMzUwIiByeD0iNTAiIHJ5PSIzMCIgZmlsbD0iI0ZGRDcwMCIgc3Ryb2tlPSIjREREIiBzdHJva2Utd2lkdGg9IjIiLz4KPHJlY3QgeD0iNTgwIiB5PSIzMzAiIHdpZHRoPSIxNSIgaGVpZ2h0PSIyNSIgZmlsbD0iI0ZGRDcwMCIvPgo8cmVjdCB4PSI2MDUiIHk9IjMzMCIgd2lkdGg9IjE1IiBoZWlnaHQ9IjI1IiBmaWxsPSIjRkZENzAwIi8+Cjx0ZXh0IHg9IjYwMCIgeT0iMzg1IiBmb250LXNpemU9IjIwIiBmaWxsPSIjMzMzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7lsI/orqE8L3RleHQ+CjxyZWN0IHg9IjEwMCIgeT0iNTAwIiB3aWR0aD0iNjAwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjVGNUY1IiBzdHJva2U9IiNEREQiIHN0cm9rZS13aWR0aD0iMiIvPgo8dGV4dCB4PSI0MDAiIHk9IjU0NSIgZm9udC1zaXplPSIyNSIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+5Y+R5bqP5biD5pyN5YqhPC90ZXh0Pgo8L3N2Zz4='
+        };
+
+        // API配置
+        const API_CONFIG = {
+            image: {
+                endpoint: 'https://api.kie.ai/api/v1/jobs'
+            }
+        };
+
+        // 生成识字词汇（支持预制词汇库和智能生成）
+        async function generateWords(theme, wordCount) {
+            try {
+                // 从词汇库获取（可能是预制或智能生成的）
+                const words = await getSceneWords(theme, wordCount);
+
+                // 如果没有足够的词汇，用默认词汇补充
+                if (words.length < wordCount) {
+                    const defaultWords = getDefaultWords(wordCount - words.length);
+                    words.push(...defaultWords);
+                }
+
+                return words.slice(0, wordCount);
+            } catch (error) {
+                console.error('获取词汇失败:', error);
+                // 出错时使用默认词汇
+                return getDefaultWords(wordCount);
+            }
+        }
+
+        // 生成图片（调用图像生成API）
+        async function generateImage(prompt, options, imageApiKey) {
+            try {
+                // 创建图像生成任务
+                const createResponse = await fetch(`${API_CONFIG.image.endpoint}/createTask`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${imageApiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'nano-banana-pro',
+                        input: {
+                            prompt,
+                            image_input: [],
+                            aspect_ratio: options.aspectRatio || '3:4',
+                            resolution: options.resolution || '2K',
+                            output_format: options.outputFormat || 'png'
+                        }
+                    })
+                });
+
+                if (!createResponse.ok) {
+                    const errorText = await createResponse.text();
+                    console.error('创建任务失败响应:', errorText);
+                    throw new Error(`图像生成任务创建失败: ${createResponse.status} ${createResponse.statusText} - ${errorText}`);
+                }
+
+                const createData = await createResponse.json();
+                console.log('创建任务响应:', createData);
+                console.log('响应状态码:', createResponse.status);
+
+                if (createData.code !== 200) {
+                    throw new Error(`API错误: ${createData.msg || createData.message || JSON.stringify(createData)}`);
+                }
+
+                const taskId = createData.data.taskId;
+                console.log('任务ID:', taskId);
+
+                // 轮询任务状态
+                let attempts = 0;
+                const maxAttempts = 150; // 增加到150次，总共300秒（5分钟）
+                console.log('开始轮询任务状态，最大尝试次数:', maxAttempts);
+                console.log('预计最长等待时间:', maxAttempts * 2, '秒（', Math.floor(maxAttempts * 2 / 60), '分钟）');
+
+                while (attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    attempts++;
+                    console.log(`第 ${attempts} 次查询任务状态...`);
+
+                    const queryUrl = `${API_CONFIG.image.endpoint}/recordInfo?taskId=${taskId}`;
+                    console.log('查询URL:', queryUrl);
+
+                    const queryResponse = await fetch(queryUrl, {
+                        headers: {
+                            'Authorization': `Bearer ${imageApiKey}`
+                        }
+                    });
+
+                    if (!queryResponse.ok) {
+                        const errorText = await queryResponse.text();
+                        console.error('查询失败响应:', errorText);
+                        throw new Error(`查询任务状态失败: ${queryResponse.status} ${queryResponse.statusText} - ${errorText}`);
+                    }
+
+                    const queryData = await queryResponse.json();
+                    console.log('查询响应数据:', queryData);
+                    if (queryData.code !== 200) {
+                        throw new Error(`API错误: ${queryData.message}`);
+                    }
+
+                    const result = queryData.data;
+                    console.log(`任务状态: ${result.state}, 已尝试: ${attempts}/${maxAttempts}`);
+
+                    if (result.state === 'success') {
+                        // 解析resultJson（它是字符串格式的JSON）
+                        let resultObj;
+                        try {
+                            resultObj = JSON.parse(result.resultJson);
+                        } catch (e) {
+                            console.error('解析resultJson失败:', e);
+                            throw new Error('解析结果数据失败');
+                        }
+
+                        if (!resultObj?.resultUrls?.length) {
+                            throw new Error('生成成功但未获取到图片URL');
+                        }
+                        return resultObj.resultUrls[0];
+                    }
+
+                    if (result.state === 'fail') {
+                        console.log('任务失败详情:', result);
+                        throw new Error(`图像生成失败: ${result.failMsg || result.failReason || '未知错误'}`);
+                    }
+                }
+
+                throw new Error(`图像生成超时：已尝试 ${maxAttempts} 次，每次间隔 2 秒，总计 ${maxAttempts * 2} 秒`);
+            } catch (error) {
+                console.error('生成图片失败:', error);
+                console.error('错误详情:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
+                throw error;
+            }
+        }
+
+        // 预制场景词汇库
+        const SCENE_WORDS = {
+            '公园': [
+                { chinese: '滑梯', pinyin: 'huá tī', category: 'facility', difficulty: 1 },
+                { chinese: '秋千', pinyin: 'qiū qiān', category: 'facility', difficulty: 1 },
+                { chinese: '跷跷板', pinyin: 'qiāo qiāo bǎn', category: 'facility', difficulty: 2 },
+                { chinese: '长椅', pinyin: 'cháng yǐ', category: 'facility', difficulty: 1 },
+                { chinese: '小路', pinyin: 'xiǎo lù', category: 'environment', difficulty: 1 },
+                { chinese: '草坪', pinyin: 'cǎo píng', category: 'environment', difficulty: 1 },
+                { chinese: '花朵', pinyin: 'huā duǒ', category: 'environment', difficulty: 1 },
+                { chinese: '大树', pinyin: 'dà shù', category: 'environment', difficulty: 1 },
+                { chinese: '小鸟', pinyin: 'xiǎo niǎo', category: 'animal', difficulty: 1 },
+                { chinese: '蝴蝶', pinyin: 'hú dié', category: 'animal', difficulty: 1 }
+            ],
+            '超市': [
+                { chinese: '购物车', pinyin: 'gòu wù chē', category: 'facility', difficulty: 1 },
+                { chinese: '货架', pinyin: 'huò jià', category: 'facility', difficulty: 1 },
+                { chinese: '收银台', pinyin: 'shōu yín tái', category: 'facility', difficulty: 2 },
+                { chinese: '苹果', pinyin: 'píng guǒ', category: 'food', difficulty: 1 },
+                { chinese: '香蕉', pinyin: 'xiāng jiāo', category: 'food', difficulty: 1 },
+                { chinese: '牛奶', pinyin: 'niú nǎi', category: 'food', difficulty: 1 },
+                { chinese: '面包', pinyin: 'miàn bāo', category: 'food', difficulty: 1 },
+                { chinese: '饼干', pinyin: 'bǐng gān', category: 'food', difficulty: 1 },
+                { chinese: '玩具', pinyin: 'wán jù', category: 'object', difficulty: 1 },
+                { chinese: '书包', pinyin: 'shū bāo', category: 'object', difficulty: 1 }
+            ],
+            '动物园': [
+                { chinese: '猴子', pinyin: 'hóu zi', category: 'animal', difficulty: 1 },
+                { chinese: '大象', pinyin: 'dà xiàng', category: 'animal', difficulty: 1 },
+                { chinese: '狮子', pinyin: 'shī zi', category: 'animal', difficulty: 1 },
+                { chinese: '熊猫', pinyin: 'xióng māo', category: 'animal', difficulty: 1 },
+                { chinese: '老虎', pinyin: 'lǎo hǔ', category: 'animal', difficulty: 2 },
+                { chinese: '长颈鹿', pinyin: 'cháng jǐng lù', category: 'animal', difficulty: 2 },
+                { chinese: '笼子', pinyin: 'lóng zi', category: 'facility', difficulty: 1 },
+                { chinese: '水池', pinyin: 'shuǐ chí', category: 'environment', difficulty: 1 },
+                { chinese: '围栏', pinyin: 'wéi lán', category: 'facility', difficulty: 2 },
+                { chinese: '牌子', pinyin: 'pái zi', category: 'facility', difficulty: 1 }
+            ],
+            '学校': [
+                { chinese: '老师', pinyin: 'lǎo shī', category: 'person', difficulty: 1 },
+                { chinese: '学生', pinyin: 'xué shēng', category: 'person', difficulty: 1 },
+                { chinese: '黑板', pinyin: 'hēi bǎn', category: 'facility', difficulty: 1 },
+                { chinese: '课桌', pinyin: 'kè zhuō', category: 'facility', difficulty: 1 },
+                { chinese: '椅子', pinyin: 'yǐ zi', category: 'facility', difficulty: 1 },
+                { chinese: '书本', pinyin: 'shū běn', category: 'object', difficulty: 1 },
+                { chinese: '铅笔', pinyin: 'qiān bǐ', category: 'object', difficulty: 1 },
+                { chinese: '橡皮', pinyin: 'xiàng pí', category: 'object', difficulty: 1 },
+                { chinese: '操场', pinyin: 'cāo chǎng', category: 'environment', difficulty: 1 },
+                { chinese: '国旗', pinyin: 'guó qí', category: 'object', difficulty: 1 }
+            ],
+            '医院': [
+                { chinese: '医生', pinyin: 'yī shēng', category: 'person', difficulty: 1 },
+                { chinese: '护士', pinyin: 'hù shi', category: 'person', difficulty: 1 },
+                { chinese: '病人', pinyin: 'bìng rén', category: 'person', difficulty: 1 },
+                { chinese: '病床', pinyin: 'bìng chuáng', category: 'facility', difficulty: 1 },
+                { chinese: '药品', pinyin: 'yào pǐn', category: 'object', difficulty: 2 },
+                { chinese: '针筒', pinyin: 'zhēn tǒng', category: 'object', difficulty: 2 },
+                { chinese: '体温计', pinyin: 'tǐ wēn jì', category: 'object', difficulty: 2 },
+                { chinese: '口罩', pinyin: 'kǒu zhào', category: 'object', difficulty: 1 },
+                { chinese: '挂号处', pinyin: 'guà hào chù', category: 'facility', difficulty: 2 },
+                { chinese: '救护车', pinyin: 'jiù hù chē', category: 'facility', difficulty: 2 }
+            ],
+            '家庭': [
+                { chinese: '爸爸', pinyin: 'bà ba', category: 'person', difficulty: 1 },
+                { chinese: '妈妈', pinyin: 'mā ma', category: 'person', difficulty: 1 },
+                { chinese: '沙发', pinyin: 'shā fā', category: 'facility', difficulty: 1 },
+                { chinese: '电视', pinyin: 'diàn shì', category: 'object', difficulty: 1 },
+                { chinese: '餐桌', pinyin: 'cān zhuō', category: 'facility', difficulty: 1 },
+                { chinese: '床', pinyin: 'chuáng', category: 'facility', difficulty: 1 },
+                { chinese: '冰箱', pinyin: 'bīng xiāng', category: 'object', difficulty: 1 },
+                { chinese: '洗衣机', pinyin: 'xǐ yī jī', category: 'object', difficulty: 2 },
+                { chinese: '窗户', pinyin: 'chuāng hu', category: 'facility', difficulty: 1 },
+                { chinese: '门', pinyin: 'mén', category: 'facility', difficulty: 1 }
+            ],
+            '海滩': [
+                { chinese: '沙滩', pinyin: 'shā tān', category: 'environment', difficulty: 1 },
+                { chinese: '海浪', pinyin: 'hǎi làng', category: 'environment', difficulty: 1 },
+                { chinese: '贝壳', pinyin: 'bèi ké', category: 'object', difficulty: 1 },
+                { chinese: '螃蟹', pinyin: 'páng xiè', category: 'animal', difficulty: 2 },
+                { chinese: '海鸥', pinyin: 'hǎi ōu', category: 'animal', difficulty: 1 },
+                { chinese: '太阳镜', pinyin: 'tài yáng jìng', category: 'object', difficulty: 2 },
+                { chinese: '遮阳伞', pinyin: 'zhē yáng sǎn', category: 'facility', difficulty: 2 },
+                { chinese: '游泳圈', pinyin: 'yóu yǒng quān', category: 'object', difficulty: 2 },
+                { chinese: '渔船', pinyin: 'yú chuán', category: 'facility', difficulty: 2 },
+                { chinese: '椰子树', pinyin: 'yē zi shù', category: 'environment', difficulty: 2 }
+            ],
+            '农场': [
+                { chinese: '农民', pinyin: 'nóng mín', category: 'person', difficulty: 1 },
+                { chinese: '拖拉机', pinyin: 'tuō lā jī', category: 'facility', difficulty: 2 },
+                { chinese: '稻谷', pinyin: 'dào gǔ', category: 'plant', difficulty: 2 },
+                { chinese: '蔬菜', pinyin: 'shū cài', category: 'plant', difficulty: 1 },
+                { chinese: '水果', pinyin: 'shuǐ guǒ', category: 'plant', difficulty: 1 },
+                { chinese: '小鸡', pinyin: 'xiǎo jī', category: 'animal', difficulty: 1 },
+                { chinese: '小鸭', pinyin: 'xiǎo yā', category: 'animal', difficulty: 1 },
+                { chinese: '小猪', pinyin: 'xiǎo zhū', category: 'animal', difficulty: 1 },
+                { chinese: '奶牛', pinyin: 'nǎi niú', category: 'animal', difficulty: 1 },
+                { chinese: '谷仓', pinyin: 'gǔ cāng', category: 'facility', difficulty: 2 }
+            ],
+            '厕所': [
+                { chinese: '马桶', pinyin: 'mǎ tǒng', category: 'facility', difficulty: 1 },
+                { chinese: '洗手池', pinyin: 'xǐ shǒu chí', category: 'facility', difficulty: 1 },
+                { chinese: '水龙头', pinyin: 'shuǐ lóng tóu', category: 'facility', difficulty: 2 },
+                { chinese: '毛巾', pinyin: 'máo jīn', category: 'object', difficulty: 1 },
+                { chinese: '肥皂', pinyin: 'féi zào', category: 'object', difficulty: 1 },
+                { chinese: '纸巾', pinyin: 'zhǐ jīn', category: 'object', difficulty: 1 },
+                { chinese: '镜子', pinyin: 'jìng zi', category: 'object', difficulty: 1 },
+                { chinese: '门', pinyin: 'mén', category: 'facility', difficulty: 1 },
+                { chinese: '窗户', pinyin: 'chuāng hu', category: 'facility', difficulty: 1 },
+                { chinese: '地漏', pinyin: 'dì lòu', category: 'facility', difficulty: 2 }
+            ]
+        };
+
+        // 获取场景词汇
+        async function getSceneWords(theme, count) {
+            // 首先尝试精确匹配预制词汇库
+            if (SCENE_WORDS[theme]) {
+                return SCENE_WORDS[theme].slice(0, count);
+            }
+
+            // 模糊匹配预制词汇库
+            const themeLower = theme.toLowerCase();
+            for (const [scene, words] of Object.entries(SCENE_WORDS)) {
+                if (themeLower.includes(scene.toLowerCase()) || scene.toLowerCase().includes(themeLower)) {
+                    return words.slice(0, count);
+                }
+            }
+
+            // 如果没有匹配，尝试使用智能词汇生成
+            try {
+                console.log('使用智能词汇生成，主题:', theme);
+                return await generateDynamicWords(theme, count);
+            } catch (error) {
+                console.warn('智能词汇生成失败，使用默认词汇:', error);
+                // 最后的备选方案：返回默认词汇
+                return getDefaultWords(count);
+            }
+        }
+
+        // 智能生成场景词汇（使用简单的关键词匹配和扩展）
+        async function generateDynamicWords(theme, count) {
+            // 基础词汇库，按类别分类
+            const baseWordLibrary = {
+                person: [
+                    { chinese: '小朋友', pinyin: 'xiǎo péng yǒu', difficulty: 1 },
+                    { chinese: '大人', pinyin: 'dà ren', difficulty: 1 },
+                    { chinese: '工作人员', pinyin: 'gōng zuò rén yuán', difficulty: 2 }
+                ],
+                facility: [
+                    { chinese: '门', pinyin: 'mén', difficulty: 1 },
+                    { chinese: '窗户', pinyin: 'chuāng hu', difficulty: 1 },
+                    { chinese: '桌子', pinyin: 'zhuō zi', difficulty: 1 },
+                    { chinese: '椅子', pinyin: 'yǐ zi', difficulty: 1 },
+                    { chinese: '墙壁', pinyin: 'qiáng bì', difficulty: 1 }
+                ],
+                object: [
+                    { chinese: '标志', pinyin: 'biāo zhì', difficulty: 1 },
+                    { chinese: '灯光', pinyin: 'dēng guāng', difficulty: 1 },
+                    { chinese: '按钮', pinyin: 'àn niǔ', difficulty: 2 }
+                ],
+                environment: [
+                    { chinese: '地面', pinyin: 'dì miàn', difficulty: 1 },
+                    { chinese: '天花板', pinyin: 'tiān huā bǎn', difficulty: 2 }
+                ]
+            };
+
+            // 根据主题智能选择相关词汇
+            const words = [];
+            const themeWords = getThemeRelatedWords(theme);
+
+            // 优先添加主题相关词汇
+            words.push(...themeWords.slice(0, Math.floor(count * 0.6)));
+
+            // 用基础词汇补充
+            const allBaseWords = [
+                ...baseWordLibrary.person,
+                ...baseWordLibrary.facility,
+                ...baseWordLibrary.object,
+                ...baseWordLibrary.environment
+            ];
+
+            // 随机选择基础词汇
+            const shuffled = allBaseWords.sort(() => 0.5 - Math.random());
+            words.push(...shuffled.slice(0, count - words.length));
+
+            return words.slice(0, count);
+        }
+
+        // 根据主题返回相关词汇（简单规则匹配）
+        function getThemeRelatedWords(theme) {
+            const themeWordMap = {
+                '交通': ['汽车', '公交车', '自行车', '红绿灯', '斑马线', '车站'],
+                '餐厅': ['餐桌', '椅子', '菜单', '碗筷', '盘子', '杯子', '厨房'],
+                '图书馆': ['书架', '书本', '桌子', '椅子', '电脑', '借书卡'],
+                '银行': ['柜台', '椅子', '号码牌', '窗口', 'ATM机', '银行卡'],
+                '车站': ['站台', '座椅', '时刻表', '售票处', '检票口', '行李'],
+                '餐厅': ['餐桌', '椅子', '菜单', '碗筷', '盘子', '杯子', '厨房'],
+                '厨房': ['灶台', '冰箱', '水槽', '刀具', '砧板', '碗碟'],
+                '卧室': ['床', '衣柜', '枕头', '被子', '台灯', '闹钟'],
+                '客厅': ['沙发', '茶几', '电视', '空调', '窗帘', '地毯'],
+                '卫生间': ['马桶', '洗手池', '淋浴', '镜子', '毛巾', '地漏']
+            };
+
+            // 检查主题包含的关键词
+            for (const [key, words] of Object.entries(themeWordMap)) {
+                if (theme.includes(key)) {
+                    return words.map(w => ({
+                        chinese: w,
+                        pinyin: getPinyin(w),
+                        category: inferCategory(w),
+                        difficulty: inferDifficulty(w)
+                    }));
+                }
+            }
+
+            // 如果没有匹配，返回一些通用词汇
+            return [
+                { chinese: '设施', pinyin: 'shè shī', category: 'facility', difficulty: 2 },
+                { chinese: '物品', pinyin: 'wù pǐn', category: 'object', difficulty: 1 },
+                { chinese: '环境', pinyin: 'huán jìng', category: 'environment', difficulty: 2 }
+            ];
+        }
+
+        // 简单的拼音转换（示例，实际可以更完善）
+        function getPinyin(chinese) {
+            // 这里只是示例，实际应该使用完整的拼音库
+            const pinyinMap = {
+                '汽车': 'qì chē',
+                '公交车': 'gōng jiāo chē',
+                '自行车': 'zì xíng chē',
+                '红绿灯': 'hóng lǜ dēng',
+                '斑马线': 'bān mǎ xiàn'
+            };
+            return pinyinMap[chinese] || 'pīn yīn';
+        }
+
+        // 根据词汇推断类别
+        function inferCategory(word) {
+            if (['门', '窗户', '桌子', '椅子', '床', '沙发'].includes(word)) return 'facility';
+            if (['书', '笔', '碗', '杯子', '玩具'].includes(word)) return 'object';
+            if (['花', '树', '草', '太阳', '月亮'].includes(word)) return 'environment';
+            return 'object';
+        }
+
+        // 根据词汇推断难度
+        function inferDifficulty(word) {
+            // 简单规则：笔画数越多难度越高
+            return word.length <= 2 ? 1 : word.length <= 3 ? 2 : 3;
+        }
+
+        // 默认词汇库
+        function getDefaultWords(count) {
+            const defaultWords = [
+                { chinese: '太阳', pinyin: 'tài yáng', category: 'environment', difficulty: 1 },
+                { chinese: '月亮', pinyin: 'yuè liàng', category: 'environment', difficulty: 1 },
+                { chinese: '星星', pinyin: 'xīng xīng', category: 'environment', difficulty: 1 },
+                { chinese: '天空', pinyin: 'tiān kōng', category: 'environment', difficulty: 1 },
+                { chinese: '白云', pinyin: 'bái yún', category: 'environment', difficulty: 1 },
+                { chinese: '小草', pinyin: 'xiǎo cǎo', category: 'environment', difficulty: 1 },
+                { chinese: '大树', pinyin: 'dà shù', category: 'environment', difficulty: 1 },
+                { chinese: '花朵', pinyin: 'huā duǒ', category: 'environment', difficulty: 2 },
+                { chinese: '小朋友', pinyin: 'xiǎo péng yǒu', category: 'person', difficulty: 1 },
+                { chinese: '老师', pinyin: 'lǎo shī', category: 'person', difficulty: 1 },
+                { chinese: '医生', pinyin: 'yī shēng', category: 'person', difficulty: 2 },
+                { chinese: '椅子', pinyin: 'yǐ zi', category: 'facility', difficulty: 1 },
+                { chinese: '桌子', pinyin: 'zhuō zi', category: 'facility', difficulty: 1 },
+                { chinese: '门', pinyin: 'mén', category: 'facility', difficulty: 1 },
+                { chinese: '窗户', pinyin: 'chuāng hu', category: 'facility', difficulty: 2 },
+                { chinese: '书本', pinyin: 'shū běn', category: 'object', difficulty: 1 },
+                { chinese: '铅笔', pinyin: 'qiān bǐ', category: 'object', difficulty: 1 },
+                { chinese: '橡皮', pinyin: 'xiàng pí', category: 'object', difficulty: 2 },
+                { chinese: '书包', pinyin: 'shū bāo', category: 'object', difficulty: 1 },
+                { chinese: '玩具', pinyin: 'wán jù', category: 'object', difficulty: 1 }
+            ];
+            return defaultWords.slice(0, count);
+        }
+
+        // 构建图像生成提示词
+        function buildImagePrompt(theme, title, words) {
+            const wordList = words.map(w => `${w.chinese} (${w.pinyin})`).join('、');
+
+            return `请生成一张儿童识字小报《${theme}》，竖版 A4，学习小报版式，适合 5–9 岁孩子 认字与看图识物。
+
+# 一、小报标题区（顶部）
+
+**顶部居中大标题**：《${title || theme}》
+* **风格**：十字小报 / 儿童学习报感
+* **文本要求**：大字、醒目、卡通手写体、彩色描边
+* **装饰**：周围添加与 ${theme} 相关的贴纸风装饰，颜色鲜艳
+
+# 二、小报主体（中间主画面）
+
+画面中心是一幅 **卡通插画风的「${theme}」场景**：
+* **整体气氛**：明亮、温暖、积极
+* **构图**：物体边界清晰，方便对应文字，不要过于拥挤。
+
+**场景分区与核心内容**
+1.  **核心区域 A（主要对象）**：表现 ${theme} 的核心活动。
+2.  **核心区域 B（配套设施）**：展示相关的工具或物品。
+3.  **核心区域 C（环境背景）**：体现环境特征（如墙面、指示牌等）。
+
+**主题人物**
+* **角色**：1 位可爱卡通人物（职业/身份：与 ${theme} 匹配）。
+* **动作**：正在进行与场景相关的自然互动。
+
+# 三、必画物体与识字清单
+
+**请务必在画面中清晰绘制以下物体，并为其预留贴标签的位置：**
+${wordList}
+
+# 四、识字标注规则
+
+对上述清单中的物体，贴上中文识字标签：
+* **格式**：两行制（第一行拼音带声调，第二行简体汉字）。
+* **样式**：彩色小贴纸风格，白底黑字或深色字，清晰可读。
+* **排版**：标签靠近对应的物体，不遮挡主体。
+
+# 五、画风参数
+* **风格**：儿童绘本风 + 识字小报风
+* **色彩**：高饱和、明快、温暖 (High Saturation, Warm Tone)
+* **质量**：8k resolution, high detail, vector illustration style, clean lines.`;
+        }
+
+        let progressInterval;
+        let generatedImage = null;
+
+        async function startGeneration() {
+            const theme = document.getElementById('theme').value.trim();
+            const title = document.getElementById('title').value.trim();
+            const wordCount = parseInt(document.getElementById('wordCount').value);
+            const aspectRatio = document.getElementById('aspectRatio').value;
+            const resolution = document.getElementById('resolution').value;
+            const outputFormat = document.getElementById('outputFormat').value;
+
+            const imageApiKey = document.getElementById('imageApiKey').value.trim();
+
+            if (!theme) {
+                alert('请输入主题');
+                return;
+            }
+
+            if (!imageApiKey) {
+                alert('请输入图像生成API密钥');
+                return;
+            }
+
+            // 验证API密钥格式（简单检查）
+            if (imageApiKey.length < 20) {
+                alert('API密钥格式不正确，请检查是否输入正确');
+                return;
+            }
+
+            console.log('开始生成，主题:', theme);
+            console.log('API密钥前缀:', imageApiKey.substring(0, 10) + '...');
+
+            // 隐藏表单，显示进度条
+            document.getElementById('generationForm').style.display = 'none';
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('resultContainer').style.display = 'none';
+
+            try {
+                // 第一步：生成词汇
+                updateProgress(10, '生成识字词汇...');
+                const words = await generateWords(theme, wordCount);
+
+                // 第二步：构建提示词
+                updateProgress(30, '构建图像生成提示词...');
+                const prompt = buildImagePrompt(theme, title, words);
+
+                // 第三步：生成图片
+                updateProgress(50, '正在提交图像生成任务...');
+                const imageOptions = { aspectRatio, resolution, outputFormat };
+                generatedImage = await generateImage(prompt, imageOptions, imageApiKey, theme);
+
+                // 完成
+                updateProgress(100, '生成完成！');
+                setTimeout(() => {
+                    showRealResult();
+                }, 500);
+            } catch (error) {
+                console.error('生成失败:', error);
+                alert(`生成失败: ${error.message}`);
+                resetForm();
+            }
+        }
+
+        function updateProgress(progress, status) {
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressFill').textContent = Math.round(progress) + '%';
+            document.getElementById('progressStatus').textContent = status;
+        }
+
+        function showRealResult() {
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'block';
+
+            if (generatedImage) {
+                document.getElementById('resultImage').src = generatedImage;
+            }
+        }
+
+        function showResult(theme) {
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'block';
+
+            // 查找最接近的示例图片
+            let selectedImage = sampleImages['公园']; // 默认图片
+            for (let key in sampleImages) {
+                if (theme.includes(key)) {
+                    selectedImage = sampleImages[key];
+                    break;
+                }
+            }
+
+            document.getElementById('resultImage').src = selectedImage;
+            document.getElementById('resultImage').alt = `${theme}识字小报`;
+        }
+
+        function downloadImage(event) {
+            event.preventDefault();
+            const img = document.getElementById('resultImage');
+            const link = document.createElement('a');
+            link.download = '识字小报_' + new Date().getTime() + '.svg';
+            link.href = img.src;
+            link.click();
+        }
+
+        function resetForm() {
+            // 清理可能存在的定时器
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+
+            // 重置全局变量
+            generatedImage = null;
+
+            // 重置界面显示
+            document.getElementById('generationForm').style.display = 'block';
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'none';
+
+            // 保留API密钥，只清除主题和标题
+            document.getElementById('theme').value = '';
+            document.getElementById('title').value = '';
+
+            console.log('表单已重置，所有状态已清除');
+        }
+    </script>
+</body>
+</html>
